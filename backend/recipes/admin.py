@@ -65,7 +65,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     def in_favorite_count(self, obj):
         """
-        Возвращаем расчет кол-ва добавления
+        Возвращаем расчет кол-ва добавлений
         в избранное рецепта.
         """
         return obj.in_favorite.count()

@@ -154,9 +154,13 @@ class Recipe(models.Model):
         help_text='Введите время приготовления рецепта',
         validators=(MinValueValidator(1),)
     )
+    pub_date = models.DateTimeField(
+        verbose_name='Дата публикации',
+        auto_now=True,
+    )
 
     class Meta:
-        ordering = ('name',)
+        ordering = ('pub_date', 'name',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
