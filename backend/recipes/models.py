@@ -22,7 +22,9 @@ class Tag(models.Model):
         max_length=constants.MAX_TAG_COLOR_LENGHT,
         help_text='Пропишите цвет в HEX формате',
         validators=(
-            validators.MinTagColorLenghtValidator(constants.MIN_HEX_COLOR_LENGHT),
+            validators.MinTagColorLenghtValidator(
+                constants.MIN_HEX_COLOR_LENGHT
+            ),
             validators.TagColorRegexValidator(),
         )
     )
