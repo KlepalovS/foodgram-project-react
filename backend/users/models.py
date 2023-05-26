@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
 from django.db import models
+
+from core import constants, validators
 
 
 class User(AbstractUser):
@@ -8,54 +9,41 @@ class User(AbstractUser):
 
     email = models.EmailField(
         verbose_name='Электронная почта',
-        max_length=254,
+        max_length=constants.MAX_EMAEL_LENGHT,
         unique=True,
         help_text='Введите действующий email!',
     )
     username = models.CharField(
         verbose_name='Юзернейм',
-        max_length=150,
+        max_length=constants.MAX_NAME_USERNAME_PASSWORD_LENGHT,
         unique=True,
         help_text='Придумате юзернейм!',
-        validators=(RegexValidator(
-            regex='^[A-Za-z.@+-]+$',
-            message=(
-                'Юзернейм должен содержать только буквы, '
-                'цифры, знак подчеркивания, точку, знак плюс, '
-                'знак минус и знак @'
-            ),
-            code='Invalid username',
-        ),)
+        validators=(
+            validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
+            validators.UserUsernameRegexValidator(),
+        )
     )
     first_name = models.CharField(
         verbose_name='Имя',
-        max_length=150,
+        max_length=constants.MAX_NAME_USERNAME_PASSWORD_LENGHT,
         help_text='Введите ваше имя!',
-        validators=(RegexValidator(
-            regex='^[А-Яа-я-]+$',
-            message=(
-                'Имя должно содержать только буквы, '
-                'знак подчеркивания и тире'
-            ),
-            code='Invalid first_name',
-        ),)
+        validators=(
+            validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
+            validators.CyrillicCharRegexValidator(),
+        )
     )
     last_name = models.CharField(
         verbose_name='Фамилия',
-        max_length=150,
+        max_length=constants.MAX_NAME_USERNAME_PASSWORD_LENGHT,
         help_text='Введите вашу фамилию',
-        validators=(RegexValidator(
-            regex='^[А-Яа-я-]+$',
-            message=(
-                'Фамилия должна содержать только буквы, '
-                'знак подчеркивания и тире'
-            ),
-            code='Invalid last_name',
-        ),)
+        validators=(
+            validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
+            validators.CyrillicCharRegexValidator(),
+        )
     )
     password = models.CharField(
         verbose_name='Пароль',
-        max_length=150,
+        max_length=constants.MAX_NAME_USERNAME_PASSWORD_LENGHT,
         help_text='Придумайте пароль!',
     )
 

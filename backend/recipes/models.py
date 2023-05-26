@@ -1,6 +1,6 @@
-from django.core.validators import (MinLengthValidator, MinValueValidator,
-                                    RegexValidator)
 from django.db import models
+
+from core import constants, validators
 from users.models import User
 
 
@@ -9,55 +9,31 @@ class Tag(models.Model):
 
     name = models.CharField(
         verbose_name='Название',
-        max_length=200,
+        max_length=constants.MAX_NAME_SLUG_MEASUREMENT_UNIT_LENGHT,
         unique=True,
         help_text='Придумай название для тега',
         validators=(
-            MinLengthValidator(2),
-            RegexValidator(
-                regex='^[А-Яа-я ]+$',
-                message=(
-                    'Название тега может быть написано'
-                    'только кириллицей. Могут использоваться '
-                    'только буквы и пробелы.'
-                ),
-                code='Invalid tag name',
-            ),
+            validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
+            validators.CyrillicCharRegexValidator(),
         )
     )
     color = models.CharField(
         verbose_name='Цвет в HEX',
-        max_length=7,
+        max_length=constants.MAX_TAG_COLOR_LENGHT,
         help_text='Пропишите цвет в HEX формате',
         validators=(
-            MinLengthValidator(4),
-            RegexValidator(
-                regex=r'^#[0-9A-Fa-f]{3}$|^#[0-9A-Fa-f]{6}$',
-                message=(
-                    'Цвет должен начинаться с символа # и '
-                    'может состоять только из цифр 0-9'
-                    'и латинских букв A-F или a-f. Длина 4 или 7 символов.'
-                ),
-                code='Invalid tag HEX color',
-            ),
+            validators.MinTagColorLenghtValidator(constants.MIN_HEX_COLOR_LENGHT),
+            validators.TagColorRegexValidator(),
         )
     )
     slug = models.SlugField(
         verbose_name='Уникальный слаг',
-        max_length=200,
+        max_length=constants.MAX_NAME_SLUG_MEASUREMENT_UNIT_LENGHT,
         unique=True,
         help_text='Введите слаг тега',
         validators=(
-            MinLengthValidator(2),
-            RegexValidator(
-                regex='^[A-Za-z_]+$',
-                message=(
-                    'Слаг тега может быть написан'
-                    'только латиницей. Могут использоваться '
-                    'только нижние подчеркивания.'
-                ),
-                code='Invalid tag slug',
-            ),
+            validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
+            validators.TagSlagRegexValidator(),
         )
     )
 
@@ -77,14 +53,22 @@ class Ingredient(models.Model):
     name = models.CharField(
         verbose_name='Название ингредиента',
         help_text='Напишите название ингредиента',
-        max_length=200,
-        validators=(MinLengthValidator(2),),
+        max_length=constants.MAX_NAME_SLUG_MEASUREMENT_UNIT_LENGHT,
+        validators=(
+            validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
+            validators.CyrillicCharRegexValidator(),
+        ),
     )
     measurement_unit = models.CharField(
         verbose_name='Единицы измерения',
-        max_length=200,
+        max_length=constants.MAX_NAME_SLUG_MEASUREMENT_UNIT_LENGHT,
         help_text='Введите единицу измерения',
-        validators=(MinLengthValidator(1),),
+        validators=(
+            validators.MinMeasurementUnitLenghtValidator(
+                constants.MIN_MEASUREMENT_UNIT_LENGHT
+            ),
+            validators.CyrillicCharRegexValidator()
+        ),
     )
 
     class Meta:
@@ -119,15 +103,11 @@ class Recipe(models.Model):
     )
     name = models.CharField(
         verbose_name='Название',
-        max_length=200,
+        max_length=constants.MAX_NAME_SLUG_MEASUREMENT_UNIT_LENGHT,
         help_text='Придумайте название рецепта',
         validators=(
-            MinLengthValidator(2),
-            RegexValidator(
-                regex='^[А-Яа-я ,]+$',
-                message='Имя может содержать только буквы!',
-                code='Invalid recipe name',
-            ),
+            validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
+            validators.CyrillicCharRegexValidator(),
         ),
     )
     image = models.ImageField(
@@ -152,11 +132,13 @@ class Recipe(models.Model):
     cooking_time = models.SmallIntegerField(
         verbose_name='Время приготовления (в минутах)',
         help_text='Введите время приготовления рецепта',
-        validators=(MinValueValidator(1),)
+        validators=(
+            validators.MinCookingTimeValueValidator(constants.MIN_COOKING_TIME),
+        )
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации',
-        auto_now=True,
+        auto_now_add=True,
     )
 
     class Meta:
@@ -186,7 +168,12 @@ class RecipeIngredientAmount(models.Model):
         on_delete=models.CASCADE,
     )
     amount = models.SmallIntegerField(
-        verbose_name='Количество'
+        verbose_name='Количество',
+        validators=(
+            validators.MinIngredientAmountValidator(
+                constants.MIN_INGREDIENT_AMOUNT
+            ),
+        )
     )
 
     class Meta:
