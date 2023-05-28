@@ -20,7 +20,7 @@ class User(AbstractUser):
         help_text='Придумате юзернейм!',
         validators=(
             validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
-            validators.UserUsernameRegexValidator(),
+            validators.LatinCharRegexValidator(),
         )
     )
     first_name = models.CharField(
@@ -45,6 +45,14 @@ class User(AbstractUser):
         verbose_name='Пароль',
         max_length=constants.MAX_NAME_USERNAME_PASSWORD_LENGHT,
         help_text='Придумайте пароль!',
+    )
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = (
+        'email',
+        'username',
+        'first_name',
+        'last_name',
+        'password',
     )
 
     class Meta:

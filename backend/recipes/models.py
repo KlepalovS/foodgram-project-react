@@ -1,7 +1,9 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 
 from core import constants, validators
-from users.models import User
+
+User = get_user_model()
 
 
 class Tag(models.Model):
@@ -35,7 +37,7 @@ class Tag(models.Model):
         help_text='Введите слаг тега',
         validators=(
             validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
-            validators.TagSlagRegexValidator(),
+            validators.LatinCharRegexValidator(),
         )
     )
 
@@ -135,7 +137,9 @@ class Recipe(models.Model):
         verbose_name='Время приготовления (в минутах)',
         help_text='Введите время приготовления рецепта',
         validators=(
-            validators.MinCookingTimeValueValidator(constants.MIN_COOKING_TIME),
+            validators.MinCookingTimeValueValidator(
+                constants.MIN_COOKING_TIME
+            ),
         )
     )
     pub_date = models.DateTimeField(

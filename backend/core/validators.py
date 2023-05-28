@@ -63,32 +63,16 @@ class TagColorRegexValidator(RegexValidator):
     code = 'Invalid tag HEX color'
 
 
-class TagSlagRegexValidator(RegexValidator):
-    """Кастомный валидатор на верное написание слага тега."""
+class LatinCharRegexValidator(RegexValidator):
+    """
+    Кастомный валидатор на верное написание латинскими
+    буквами с использованием нижнего подчеркивания.
+    """
 
     regex = '^[A-Za-z_]+$'
     message = (
-        'Слаг тега может быть написан'
-        'только латиницей. Могут использоваться '
+        'Допускается только латиница.'
+        'Могут использоваться '
         'только нижние подчеркивания.'
     )
-    code = 'Invalid tag slug'
-
-
-class CyrillicCharRegexValidator(RegexValidator):
-    """
-    Кастомный валидатор на проверку написания
-    текста кириллицей.
-    """
-
-
-class UserUsernameRegexValidator(RegexValidator):
-    """Кастомный валидатор правильного написания юзернейма."""
-
-    regex = '^[A-Za-z.@+-]+$'
-    message = (
-        'Юзернейм должен содержать только буквы, '
-        'цифры, знак подчеркивания, точку, знак плюс, '
-        'знак минус и знак @'
-    )
-    code = 'Invalid username'
+    code = 'Invalid char not latin'
