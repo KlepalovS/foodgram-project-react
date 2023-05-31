@@ -3,7 +3,7 @@ from django.db.models import F
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework.exceptions import ValidationError
-from rest_framework.serializers import (ModelSerializer,
+from rest_framework.serializers import (IntegerField, ModelSerializer,
                                         PrimaryKeyRelatedField,
                                         SerializerMethodField)
 from rest_framework.status import HTTP_400_BAD_REQUEST
@@ -23,13 +23,14 @@ class RecipMiniFieldseSerializer(CustomBaseSerializer):
     """
 
     class Meta:
+        model = Recipe
         fields = (
             'id',
             'name',
             'image',
             'cooking_time',
         )
-        read_only_fields = '__all__'
+        read_only_fields = ('__all__',)
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -73,6 +74,8 @@ class CustomUserSerializer(UserSerializer):
         наличие есть ли юзер в подписке у автора рецепта.
         """
         user = self.context['request'].user
+        if user.is_anonymous:
+            return False
         return (
             user.subscriber_user.filter(author=obj).exists()
         )
@@ -100,7 +103,7 @@ class SubscriptionSerializer(CustomUserSerializer):
             'recipes',
             'recipes_count',
         )
-        read_only_fields = '__all__'
+        read_only_fields = ('email', 'username', 'first_name', 'last_name')
 
     def get_recipes_count(self, obj):
         """Возвращает количество рецептов у автора."""
@@ -132,7 +135,7 @@ class TagSerializer(ModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name', 'color', 'slug',)
-        read_only_fields = '__all__'
+        read_only_fields = ('__all__',)
 
 
 class IngredientSerializer(ModelSerializer):
@@ -141,11 +144,13 @@ class IngredientSerializer(ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit',)
-        read_only_fields = '__all__'
+        read_only_fields = ('__all__',)
 
 
 class RecipeIngredientAmountSerializer(ModelSerializer):
     """Сериализатор количества игредиента в рецепте."""
+
+    id = IntegerField(write_only=True)
 
     class Meta:
         model = RecipeIngredientAmount
@@ -160,7 +165,7 @@ class ReadRecipeSerializer(CustomBaseSerializer):
 
     author = CustomUserSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
-    is_favorite = SerializerMethodField()
+    is_favorited = SerializerMethodField()
     is_in_shopping_cart = SerializerMethodField()
     ingredients = SerializerMethodField()
 
@@ -171,7 +176,7 @@ class ReadRecipeSerializer(CustomBaseSerializer):
             'tags',
             'author',
             'ingredients',
-            'is_favorite',
+            'is_favorited',
             'is_in_shopping_cart',
             'name',
             'image',
@@ -179,7 +184,7 @@ class ReadRecipeSerializer(CustomBaseSerializer):
             'cooking_time',
         )
 
-    def get_is_favorite(self, obj):
+    def get_is_favorited(self, obj):
         """
         Определяет статус наличия рецпта в избранном у юзера
         для получения значения поля is_favorite. Если юзер
@@ -188,7 +193,7 @@ class ReadRecipeSerializer(CustomBaseSerializer):
         """
         return (
             self.has_user_related_obj_exists_or_false(
-                self, 'favorite_recipe_user', 'recipe', obj
+                'favorite_recipe_user', 'recipe', obj
             )
         )
 
@@ -201,18 +206,18 @@ class ReadRecipeSerializer(CustomBaseSerializer):
         """
         return (
             self.has_user_related_obj_exists_or_false(
-                self, 'shopping_cart_user', 'recipe', obj
+                'shopping_cart_user', 'recipe', obj
             )
         )
 
     def get_ingredients(self, obj):
         """Получаем игредиенты для вывода в рецепте."""
         return (
-            obj.ingredients_in_recipe.values(
+            obj.ingredients.values(
                 'id',
                 'name',
                 'measurement_unit',
-                amount=F('ingredients_in_recipe__amount')
+                amount=F('recipeingredientamount__amount')
             )
         )
 
@@ -225,12 +230,14 @@ class WriteRecipeSerializer(CustomBaseSerializer):
         queryset=Tag.objects.all(),
         many=True,
     )
+    author = CustomUserSerializer(read_only=True)
 
     class Meta:
         model = Recipe
         fields = (
             'ingredients',
             'tags',
+            'author',
             'image',
             'name',
             'text',
@@ -286,16 +293,16 @@ class WriteRecipeSerializer(CustomBaseSerializer):
 
     def update(self, instance, validated_data):
         """Обновляем выбранный рецепт."""
-        tags, ingredients = self.get_tags_and_ingredients_from_validated_data(
-            data=validated_data
-        )
+        if 'tags' in validated_data:
+            instance.tags.clear()
+            instance.tags.set(validated_data.pop('tags'))
+        if 'ingredients' in validated_data:
+            instance.recipeingredientamount_set.all().delete()
+            self.create_recipe_ingredients_amount(
+                recipe=instance,
+                ingredients=validated_data.pop('ingredients')
+            )
         instance = super().update(instance, validated_data)
-        instance.tags.clear()
-        instance.ingredients.clear()
-        instance.tags.set(tags)
-        self.add_tags_and_ingredients_to_recipe(
-            recipe=instance, tags=tags, ingredients=ingredients
-        )
         instance.save()
         return instance
 

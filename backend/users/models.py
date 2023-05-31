@@ -19,8 +19,9 @@ class User(AbstractUser):
         unique=True,
         help_text='Придумате юзернейм!',
         validators=(
-            validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
+            validators.not_me_username_validator,
             validators.LatinCharRegexValidator(),
+            validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
         )
     )
     first_name = models.CharField(
@@ -44,15 +45,13 @@ class User(AbstractUser):
     password = models.CharField(
         verbose_name='Пароль',
         max_length=constants.MAX_NAME_USERNAME_PASSWORD_LENGHT,
-        help_text='Придумайте пароль!',
+        help_text='Введите пароль!'
     )
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = (
-        'email',
         'username',
         'first_name',
         'last_name',
-        'password',
     )
 
     class Meta:
@@ -89,7 +88,7 @@ class Subscription(models.Model):
     author = models.ForeignKey(
         User,
         verbose_name='Автор в подписке',
-        related_name='user_in_subscription',
+        related_name='author_in_subscription',
         on_delete=models.CASCADE,
     )
     subscription_date = models.DateTimeField(

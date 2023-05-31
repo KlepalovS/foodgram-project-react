@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.core.validators import (MinLengthValidator, MinValueValidator,
                                     RegexValidator)
 
@@ -76,3 +77,12 @@ class LatinCharRegexValidator(RegexValidator):
         'только нижние подчеркивания.'
     )
     code = 'Invalid char not latin'
+
+
+def not_me_username_validator(value):
+    """
+    Кастомный валидатор, проверяющий, что юзернейм
+    не является 'me'.
+    """
+    if value == 'me':
+        raise ValidationError('Юзернейм не может быть me!')

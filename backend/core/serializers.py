@@ -49,12 +49,10 @@ class CustomBaseSerializer(ModelSerializer):
         если юзер авторизован, иначе получаем False.
         """
         user = self.get_not_anon_user_from_context_or_none()
-        related_manager = getattr(user, related_name)
-        return (
-            related_manager.filter(**{field: value}).exists()
-            if user
-            else False
-        )
+        if self.get_not_anon_user_from_context_or_none():
+            related_manager = getattr(user, related_name)
+            return related_manager.filter(**{field: value}).exists()
+        return False
 
     def create_recipe_ingredients_amount(self, recipe, ingredients):
         """Заносим данные в таблицу количества ингредиента в рецепте."""

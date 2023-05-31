@@ -121,6 +121,10 @@ class Recipe(models.Model):
     text = models.TextField(
         verbose_name='Описание',
         help_text='Опишите рецепт',
+        validators=(
+            validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
+            validators.CyrillicCharRegexValidator(),
+        ),
     )
     ingredients = models.ManyToManyField(
         Ingredient,
@@ -248,7 +252,7 @@ class FavoriteRecipe(models.Model):
 
 
 class Cart(models.Model):
-    """Модель продуктовой корзины."""
+    """Модель корзины покупок."""
 
     user = models.ForeignKey(
         User,
