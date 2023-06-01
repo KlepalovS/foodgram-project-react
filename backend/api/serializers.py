@@ -102,7 +102,13 @@ class SubscriptionSerializer(CustomUserSerializer):
             'recipes',
             'recipes_count',
         )
-        read_only_fields = ('email', 'username', 'first_name', 'last_name')
+        read_only_fields = (
+            'email',
+            'username',
+            'first_name',
+            'last_name',
+            'recipes',
+        )
 
     def get_recipes_count(self, obj):
         """Возвращает количество рецептов у автора."""
