@@ -63,6 +63,8 @@ jobs:
           sudo docker-compose stop
           sudo docker-compose pull backend
           sudo docker-compose rm backend
+          sudo docker-compose pull frontend
+          sudo docker-compose rm frontend
           touch .env
           echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
           echo DEBUG=${{ secrets.DEBUG }} >> .env
