@@ -19,7 +19,7 @@ urlpatterns = [
     path('auth/', include('djoser.urls.authtoken')),
     path(
         'docs/',
-        TemplateView.as_view(template_name='../docs/redoc.html'),
+        TemplateView.as_view(template_name='redoc.html'),
         name='docs'
     ),
 ]
