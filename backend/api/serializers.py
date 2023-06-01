@@ -120,7 +120,7 @@ class SubscriptionSerializer(CustomUserSerializer):
         recipes_limit = request.GET.get('recipes_limit')
         recipes = obj.recipe_author.all()
         if recipes_limit:
-            recipes = recipes[:recipes_limit]
+            recipes = recipes[:int(recipes_limit)]
         return RecipMiniFieldseSerializer(recipes, many=True, read_only=True)
 
     def validate(self, data):
