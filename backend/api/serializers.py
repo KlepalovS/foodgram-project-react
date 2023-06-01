@@ -87,7 +87,7 @@ class SubscriptionSerializer(CustomUserSerializer):
     код. Добавляем два новых поля recipes и recipes_count.
     """
 
-    recipes = RecipMiniFieldseSerializer(many=True, read_only=True)
+    recipes = SerializerMethodField()
     recipes_count = SerializerMethodField()
 
     class Meta:
@@ -113,6 +113,15 @@ class SubscriptionSerializer(CustomUserSerializer):
     def get_recipes_count(self, obj):
         """Возвращает количество рецептов у автора."""
         return obj.recipe_author.count()
+
+    def get_recipes(self, obj):
+        """Возвращаем рецепты у автора в подписке."""
+        request = self.context['request']
+        recipes_limit = request.GET['recipes_limit']
+        recipes = obj.recipe_author.all()
+        if recipes_limit:
+            recipes = recipes[:recipes_limit]
+        return RecipMiniFieldseSerializer(recipes, many=True, read_only=True)
 
     def validate(self, data):
         """
