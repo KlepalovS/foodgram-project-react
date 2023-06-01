@@ -117,7 +117,7 @@ class SubscriptionSerializer(CustomUserSerializer):
     def get_recipes(self, obj):
         """Возвращаем рецепты у автора в подписке."""
         request = self.context['request']
-        recipes_limit = request.GET['recipes_limit']
+        recipes_limit = request.GET.get('recipes_limit')
         recipes = obj.recipe_author.all()
         if recipes_limit:
             recipes = recipes[:recipes_limit]
