@@ -1,5 +1,5 @@
 [![Foodgram workflow](https://github.com/KlepalovS/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)](https://github.com/KlepalovS/foodgram-project-react/actions/workflows/foodgram_workflow.yml)
-# Foodgram. Упакован в Docker контейнеры для локального запуска.
+# Foodgram. Упакован в Docker контейнеры для локального запуска. Настроены CI/CD.
 ## Приложение «Продуктовый помощник»: сайт, на котором пользователи будут публиковать рецепты, добавлять чужие рецепты в избранное и подписываться на публикации других авторов. Сервис «Список покупок» позволит пользователям создавать список продуктов, которые нужно купить для приготовления выбранных блюд. 
 
 
