@@ -1,3 +1,4 @@
+[![Foodgram workflow](https://github.com/KlepalovS/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)](https://github.com/KlepalovS/foodgram-project-react/actions/workflows/foodgram_workflow.yml)
 # Foodgram. Упакован в Docker контейнеры для локального запуска.
 ## Приложение «Продуктовый помощник»: сайт, на котором пользователи будут публиковать рецепты, добавлять чужие рецепты в избранное и подписываться на публикации других авторов. Сервис «Список покупок» позволит пользователям создавать список продуктов, которые нужно купить для приготовления выбранных блюд. 
 
@@ -10,6 +11,8 @@
 
 - Самостоятельная регистрация новых пользователей через POST запрос.
 - Токен получается через передачу username и email.
+- Упакован в Docker контейнеры.
+- Настроены CI/CD с применением GitHub Actions и автоматическим развертыванием на боевом сервере Яндекс.Облака.
 
 ## Технологии
 
@@ -21,13 +24,15 @@
 - [PostgreSQL](https://www.postgresql.org) - свободная объектно-реляционная система управления базами данных.
 - [React](https://react.dev) - JavaScript-библиотека с открытым исходным кодом для разработки пользовательских интерфейсов. 
 - [Gunicorn](https://gunicorn.org) - HTTP-сервер с интерфейсом шлюза веб-сервера Python.
+- [Яндекс.Облако](https://cloud.yandex.ru/) - публичная облачная платформа от российской интернет-компании «Яндекс». Yandex.Cloud предоставляет частным и корпоративным пользователям инфраструктуру и вычислительные ресурсы в формате as a service.
+- [GitHub Actions](https://docs.github.com/ru/actions) - это облачный сервис, инструмент для автоматизации процессов тестирования и деплоя ваших проектов. Он служит тестовой площадкой, на которой можно запускать и тестировать проекты в изолированном окружении. 
 
 ##### Команда разработки:
 
 - [Слава (в роли Python-разработчика - разработчик бекенда)](https://github.com/KlepalovS)
 - [Яндекс.Практикум (в роли разработчика фронтенда)](https://practicum.yandex.ru/)
 
-## Инструкция по развертыванию проекта.
+## Инструкция по локальному развертыванию проекта.
 
 Проект упакован в четыре контейнера: frontend, nginx, PostgreSQL, gunicorn + Django.
 Для локального запуска в контейнерах необходим docker, docker-compose
@@ -65,6 +70,14 @@ docker-compose exec backend python manage.py shell
 from django.core.management.utils import get_random_secret_key
 get_random_secret_key()
 ```
+Переменные режима работы сервера.
+```
+DEBAG='False'
+```
+Разрешенные хосты для подключения.
+```
+ALLOWED_HOSTS='localhost'
+```
 Переменные для настройки БД PostgreSQL в Джанго.
 Движок БД. ENGINE в settings.py DATABASES.
 ```
@@ -73,7 +86,7 @@ DB_ENGINE=django.db.backends.postgresql
 Задаем имя БД.
 NAME в settings.py DATABASES.
 ```
-DB_NAME=postgres
+POSTGRES_DB=postgres
 ```
 Можно сменить БД на новую, прежде создав ее (контейнер запущен).
 Далее меняем в .env файле.
@@ -106,15 +119,15 @@ DB_PORT=5432
 Запускаем производим развертывание инфраструктуры.
 
 ```
-docker-compose up -d
+docker-compose -f docker-compose-local.yml up -d
 ```
 
-Применяем миграции, создаем суперюзера и собираем статику в контейнере web.
+Применяем миграции, создаем суперюзера и собираем статику в контейнере backend.
 
 ```
-docker-compose exec web python manage.py migrate
-docker-compose exec web python manage.py createsuperuser
-docker-compose exec web python manage.py collectstatic --no-input 
+docker-compose exec backend python manage.py migrate
+docker-compose exec backend python manage.py createsuperuser
+docker-compose exec backend python manage.py collectstatic --no-input 
 ```
 
 Наполняем БД ингредиентами и тегами.
@@ -129,9 +142,50 @@ docker-compose exec backend python manage.py loaddatatodb
 docker-compose down -v
 ```
 
+## Инструкция для CI/CD находится в файле foodgram_workflow.yml.
+
+При пуше в ветку master последовательно запускаются четыре задачи (jobs):
+
+- Tests - тестирование проекта на соответствие PEP8. Задействуем модуль actions/setup-python@v2 для запуска пакетов python. 
+- Build_and_push_to_docker_hub - создается образ докер контейнера и отправляется в репозиторий докерхаба. Задействуем модуль docker/setup-buildx-action@v1 для сборки Docker образов, docker/login-action@v1 для установки соединения с DockerHub, docker/build-push-action@v2 для отправки собранного образа в репозиторий DockerHub.
+- Deploy - развертывание проекта на боевом сервере Яндекс.Облака. Задействуем модуль appleboy/ssh-action@master для инициализации подключения по SSH и выполнения скрипта.
+- Send_message - отправка сообщения в тг об успешном выполнении workflow. Задействуем модуль appleboy/telegram-action@master.
+
+Перед первым деплоем необходимо закинуть на сервер два файла: docker-compose.yml и nginx.conf. Команда относительно нахождения в корневой директории проекта.
+
+```
+scp /infra/doker-compose.yml /infra/nginx.conf имя_пользователя@адрес_сервера:/home/имя_пользователя/
+```
+
+После первого успешного деплоя необходимо на сервере выполнить следующие действия:
+- Применяем миграции, создаем суперюзера и собираем статику в контейнере backend.
+
+```
+sudo docker-compose exec backend python manage.py migrate
+sudo docker-compose exec backend python manage.py createsuperuser
+sudo docker-compose exec backend python manage.py collectstatic --no-input 
+```
+
+- Наполняем БД ингредиентами и тегами.
+
+```
+sudo docker-compose exec backend python manage.py loaddatatodb
+```
+
+Для успешного выполнения foodgram_workflow.yml необходимо в настройках репозитория настроить следующие секретные ключи:
+
+- DOCKER_USERNAME и DOCKER_PASSWORD - имя пользователя и пароль от докерхаба.
+- HOST, USER, SSH_KEY и PASSPHRASE - ip сервера, имя пользователя на сервере, приватный SSH ключ комьютера, имеющего доступ к боевому серверу, и PASSPHRASE от секретного ключа. 
+```
+cat ~/.ssh/id_rsa
+```
+- SECRET_KEY, DEBAG, ALLOWED_HOSTS - секретный ключ Джанги, переменная режима работы сервера, разрешенные хосты для подключения.
+- DB_ENGINE, POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, DB_HOST, DB_PORT - движок, название, пользователь, пароль, хост и порт для работы с БД.
+
+
 ## Примеры работы
 
-Подробная документация доступна по эндпоинту /api/redoc/
+Подробная документация доступна по эндпоинту /api/docs/
 Для неавторизованных пользователей работа на сайте доступна только в режиме чтения.
 
 ## Пользовательские роли

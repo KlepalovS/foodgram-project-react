@@ -1,9 +1,8 @@
-from datetime import datetime
-
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -113,16 +112,16 @@ def _create_shopping_cart_text(user, ingredients, date):
     """Получаем текст списка покупок."""
     text = (
         f'Привет, {user.first_name}!\n\n'
-        f'Вот твой список покупок на {date:%d.%m}.\n\n'
+        f'Вот твой список покупок на {date.strftime("%d.%m")}.\n\n'
         'Для выбранных рецептов нужны игредиенты:\n\n'
     )
     text += '\n'.join([
         f' - {ingredient["ingredient__name"]} '
         f'({ingredient["ingredient__measurement_unit"]})'
-        f' - {ingredient["amount"]}'
+        f' - {ingredient["in_shopping_cart_ingredient_amount"]}'
         for ingredient in ingredients
     ])
-    text += f'\n\nПолучено с помощью Foodgram {date:%Y}.'
+    text += f'\n\nПолучено с помощью Foodgram {date.strftime("%Y")}.'
     return text
 
 
@@ -138,8 +137,8 @@ def create_and_download_shopping_cart(user):
     ).values(
         'ingredient__name',
         'ingredient__measurement_unit'
-    ).annotate(amount=Sum('amount'))
-    shopping_list_date = datetime.today()
+    ).annotate(in_shopping_cart_ingredient_amount=Sum('amount'))
+    shopping_list_date = timezone.now()
     cart_text = _create_shopping_cart_text(
         user, ingredients, shopping_list_date
     )

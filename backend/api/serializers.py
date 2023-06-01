@@ -251,11 +251,7 @@ class WriteRecipeSerializer(CustomBaseSerializer):
         )
         ingredients_in_recipe = []
         for ingredient in ingredients:
-            validate_ingredient = get_object_or_404(
-                Ingredient,
-                id=ingredient['id']
-            )
-            if validate_ingredient in ingredients_in_recipe:
+            if ingredient in ingredients_in_recipe:
                 raise ValidationError({
                     "ingredients": "Нельзя дважды добавлять ингредиент!"
                 })
@@ -263,7 +259,7 @@ class WriteRecipeSerializer(CustomBaseSerializer):
                 raise ValidationError({
                     "amount": "Количесво ингредиента не может быть меньше 1!"
                 })
-            ingredients_in_recipe.append(validate_ingredient)
+            ingredients_in_recipe.append(ingredient)
         return value
 
     def validate_tags(self, value):
@@ -302,9 +298,7 @@ class WriteRecipeSerializer(CustomBaseSerializer):
                 recipe=instance,
                 ingredients=validated_data.pop('ingredients')
             )
-        instance = super().update(instance, validated_data)
-        instance.save()
-        return instance
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         """

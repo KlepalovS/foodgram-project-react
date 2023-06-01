@@ -4,7 +4,7 @@ from django.core.files.base import ContentFile
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ImageField, ModelSerializer
 
-from recipes.models import Ingredient, RecipeIngredientAmount
+from recipes.models import RecipeIngredientAmount
 
 
 class Base64ImageField(ImageField):
@@ -59,7 +59,7 @@ class CustomBaseSerializer(ModelSerializer):
         RecipeIngredientAmount.objects.bulk_create(
             [RecipeIngredientAmount(
                 recipe=recipe,
-                ingredient=Ingredient.objects.get(id=ingredient['id']),
+                ingredient_id=ingredient['id'],
                 amount=ingredient['amount']
             )for ingredient in ingredients]
         )
