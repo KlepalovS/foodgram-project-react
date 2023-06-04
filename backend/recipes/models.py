@@ -111,8 +111,6 @@ class Recipe(models.Model):
         help_text='Придумайте название рецепта',
         validators=(
             validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
-            validators.CyrillicCharRegexValidator(),
-            validators.LatinCharRegexValidator(),
         ),
     )
     image = models.ImageField(
