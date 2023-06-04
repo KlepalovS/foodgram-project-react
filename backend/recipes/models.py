@@ -112,6 +112,7 @@ class Recipe(models.Model):
         validators=(
             validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
             validators.CyrillicCharRegexValidator(),
+            validators.LatinCharRegexValidator(),
         ),
     )
     image = models.ImageField(
@@ -123,7 +124,6 @@ class Recipe(models.Model):
         help_text='Опишите рецепт',
         validators=(
             validators.MinTwoCharValidator(constants.MIN_TEXT_LENGHT),
-            validators.CyrillicCharRegexValidator(),
         ),
     )
     ingredients = models.ManyToManyField(
@@ -137,7 +137,7 @@ class Recipe(models.Model):
         help_text='Выбирете теги для рецепта',
         related_name='recipe_tags',
     )
-    cooking_time = models.SmallIntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления (в минутах)',
         help_text='Введите время приготовления рецепта',
         validators=(
@@ -177,7 +177,7 @@ class RecipeIngredientAmount(models.Model):
         verbose_name='Ингредиент',
         on_delete=models.CASCADE,
     )
-    amount = models.SmallIntegerField(
+    amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
         validators=(
             validators.MinIngredientAmountValidator(
