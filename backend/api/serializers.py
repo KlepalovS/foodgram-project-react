@@ -116,12 +116,12 @@ class SubscriptionSerializer(CustomUserSerializer):
 
     def get_recipes(self, obj):
         """Возвращаем рецепты у автора в подписке."""
-        # request = self.context['request']
-        # recipes_limit = request.GET.get('recipes_limit')
+        request = self.context['request']
+        recipes_limit = request.GET.get('recipes_limit')
         recipes = obj.recipe_author.all()
-        # if recipes_limit:
-        #     recipes = recipes[:int(recipes_limit)]
-        return RecipMiniFieldseSerializer(recipes, many=True, read_only=True)
+        if recipes_limit:
+            recipes = recipes[:int(recipes_limit)]
+        return RecipMiniFieldseSerializer(recipes, many=True, read_only=True).data
 
     def validate(self, data):
         """
